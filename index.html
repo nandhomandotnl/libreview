@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libreview</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.5s;
+            text-align: center;
+        }
+        .container {
+            font-size: 3em;
+            font-weight: bold;
+        }
+        .arrow {
+            font-size: 2em;
+            margin-left: 10px;
+        }
+        .info {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span id="glucoseValue">--</span>
+        <span id="trendArrow" class="arrow">↔</span>
+    </div>
+    <div class="info">
+        <div id="patientName">Patiënt: --</div>
+        <div id="lastUpdate">Laatste update: --</div>
+    </div>
+
+    <script>
+        const trendSymbols = {
+            1: "↓", // Recht omlaag
+            2: "↘", // Schuin omlaag
+            3: "⭢", // Recht
+            4: "↗", // Schuin omhoog
+            5: "↑"  // Snel omhoog
+        };
+
+        function updateUI(glucose, trendArrow, firstName, lastName, timestamp) {
+            document.getElementById("glucoseValue").textContent = glucose.toFixed(1);
+            document.getElementById("trendArrow").textContent = trendSymbols[trendArrow] || "⭢";
+            document.getElementById("patientName").textContent = `Chickie: ${firstName} ${lastName}`;
+            document.getElementById("lastUpdate").textContent = `Laatste update: ${timestamp}`;
+
+            // Achtergrondkleur aanpassen
+            if (glucose < 4.0) {
+                document.body.style.backgroundColor = "#eb343a";
+            } else if (glucose >= 4.0 && glucose <= 8.5) {
+                document.body.style.backgroundColor = "#34eb67";
+            } else {
+                document.body.style.backgroundColor = "#eb343a";
+            }
+        }
+
+        async function fetchGlucose() {
+            try {
+                const response = await fetch("http://localhost:3000/glucose");
+                const data = await response.json();
+                updateUI(data.glucose, data.trendArrow, data.firstName, data.lastName, data.timestamp);
+            } catch (error) {
+                console.error("Fout bij ophalen van glucose data:", error);
+            }
+        }
+
+        // Haal elke 10 seconden de glucosegegevens op
+        setInterval(fetchGlucose, 60000);
+        fetchGlucose(); // Directe eerste call
+    </script>
+</body>
+</html>
